@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Elettrica Camandona</title>
+    <title>Gestione Elettrica Casa</title>
     <style>
         :root {
             --primary: #007bff;
@@ -207,20 +207,22 @@
 
         const defaultSettings = { maxTotal: 4400, maxM1: 3680, maxM2: 3680 };
         const defaultScenarios = {
-            remoto: { frigorifero: 0, stufa_pellet: 0 },
-            notte: { frigorifero: 0, scaldabagno_m2: 0, stufa_elettrica: 0 }
+            remoto: { stufa_elettrica: 0, stufa_pellet: 0 },
+            notte: { frigorifero: 0, scaldabagno_m2: 0, stufa_elettrica: 0, stufa_elettrica2: 0 }
         };
         
         const defaultAppliances = [
             { id: "frigorifero", name: "Frigorifero", montante: 1, group: "Ciabatta Frigo + Pellet", modes: [{label: "ON", watts: 200}] },
             { id: "stufa_pellet", name: "Stufa a Pellet", montante: 1, group: "Ciabatta Frigo + Pellet", modes: [{label: "Regime", watts: 110}, {label: "Accensione", watts: 330}] },
+            { id: "aspirapolvere_stufa", name: "Aspira Cenere", montante: 1, group: "Ciabatta Frigo + Pellet", modes: [{label: "ON", watts: 600}] },
             
             { id: "lavastoviglie", name: "Lavastoviglie", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 800}] },
             { id: "scaldabagno_cucina", name: "Scaldabagno Cucina (10L)", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 1200}] },
+            { id: "aspirapolvere", name: "Aspirapolvere", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 190}] },
             
             { id: "forno", name: "Forno Elettrico", montante: 1, group: "", modes: [{label: "ON", watts: 3000}] },
             { id: "led_m1", name: "6 Lampadine LED", montante: 1, group: "", modes: [{label: "ON", watts: 60}] },
-            { id: "scalda_acqua", name: "Scalda Acqua", montante: 1, group: "", modes: [{label: "ON", watts: 2200}] },
+            { id: "scalda_acqua", name: "Scalda Acqua", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 2200}] },
             
             { id: "stufa_elettrica", name: "Stufa Elettrica", montante: 2, group: "", modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
             { id: "scaldabagno_m2", name: "Scaldabagno Bagno", montante: 2, group: "", modes: [{label: "ON", watts: 1200}] },
