@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Elettrica Camandona</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --safe: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --inactive: #e0e0e0;
+        }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { margin: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 210px; }
+        
+        .header { background: #222; color: white; display: flex; justify-content: space-around; padding: 6px 0; position: sticky; top: 0; z-index: 100; }
+        .tab-btn { background: none; border: none; color: white; font-size: 0.9rem; padding: 10px; cursor: pointer; opacity: 0.6; }
+        .tab-btn.active { opacity: 1; border-bottom: 3px solid var(--primary); font-weight: bold; }
+        
+        .container { padding: 12px; max-width: 600px; margin: 0 auto; display: none; }
+        .container.active { display: block; }
+        
+        h2 { border-bottom: 1px solid #ddd; padding-bottom: 4px; color: #444; font-size: 1rem; margin-top: 15px; margin-bottom: 10px;}
+        
+        /* Gruppi Ciabatta */
+        .ciabatta-group { border: 1px dashed #999; border-radius: 6px; padding: 8px; margin-bottom: 10px; background: #fcfcfc; }
+        .ciabatta-title { font-size: 0.75rem; font-weight: bold; color: #666; margin-bottom: 6px; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
+        
+        /* Liste Elettrodomestici - Font compatti */
+        .item { background: var(--card-bg); padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; }
+        .ciabatta-group .item { margin-bottom: 4px; box-shadow: none; border: 1px solid #eee; }
+        .ciabatta-group .item:last-child { margin-bottom: 0; }
+        
+        .item-header { display: flex; justify-content: space-between; align-items: center; }
+        .item-name { font-weight: 600; font-size: 0.85rem; }
+        .item-watts { font-size: 0.75rem; color: #666; background: #f0f0f0; padding: 2px 6px; border-radius: 4px; }
+        
+        /* Controllo a Segmenti */
+        .seg-control { display: flex; background: var(--inactive); border-radius: 4px; overflow: hidden; }
+        .seg-btn { flex: 1; padding: 6px 4px; text-align: center; font-size: 0.75rem; font-weight: bold; border: none; background: transparent; color: #555; cursor: pointer; transition: 0.15s; border-right: 1px solid #ccc; }
+        .seg-btn:last-child { border-right: none; }
+        .seg-btn.active { background: var(--safe); color: white; }
+        .seg-btn.active.mode-max { background: var(--warning); color: #000; }
+
+        /* Dashboard Bottom */
+        .dashboard { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 8px 12px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 100; max-width: 600px; margin: 0 auto; border-top-left-radius: 12px; border-top-right-radius: 12px; }
+        .meter { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 6px 8px; border-radius: 6px; font-weight: bold; background: #eee; }
+        .meter-info { display: flex; flex-direction: column; }
+        .meter-name { font-size: 0.8rem; }
+        .meter-limit { font-size: 0.7rem; color: #555; font-weight: normal; }
+        .val { text-align: right; line-height: 1.1; }
+        .val-w { font-size: 1rem; display: block; }
+        .val-a { font-size: 0.75rem; font-weight: normal; }
+
+        .safe-bg { background: #d4edda; color: #155724; }
+        .warning-bg { background: #fff3cd; color: #856404; }
+        .danger-bg { background: #f8d7da; color: #721c24; }
+        
+        /* Form Amministrazione */
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.8rem; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
+        .btn { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .btn-success { background: var(--safe); }
+        .btn-danger { background: var(--danger); width: auto; padding: 6px 10px; font-size: 0.8rem; }
+        
+        .scenarios { display: flex; gap: 8px; margin-bottom: 12px; }
+        .scenario-btn { flex: 1; padding: 8px; background: #e0e0e0; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;}
+        .scenario-btn:active { background: #ccc; }
+        
+        .scenario-checkbox-list { background: white; padding: 8px; border-radius: 4px; border: 1px solid #ccc; max-height: 250px; overflow-y: auto; }
+        .scenario-checkbox-list label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-weight: normal; font-size: 0.85rem; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+        .scenario-checkbox-list select { width: auto; padding: 2px; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="tab-btn active" onclick="switchTab('simulatore')">Simulatore</button>
+        <button class="tab-btn" onclick="switchTab('admin')">Amministrazione</button>
+    </div>
+
+    <div id="simulatore" class="container active">
+        <div class="scenarios">
+            <button class="scenario-btn" onclick="applyScenario('tutto_spento')">Spento</button>
+            <button class="scenario-btn" onclick="applyScenario('remoto')">Remoto</button>
+            <button class="scenario-btn" onclick="applyScenario('notte')">Notte</button>
+        </div>
+
+        <h2>Montante 1 (Prese/Elettrom.)</h2>
+        <div id="list-m1"></div>
+
+        <h2>Montante 2 (Luce/Bagno)</h2>
+        <div id="list-m2"></div>
+    </div>
+
+    <div id="admin" class="container">
+        <h2>Configurazione Scenari Rapidi</h2>
+        <div class="form-group">
+            <select id="cfg-scenario-select" onchange="renderScenarioAdminList()">
+                <option value="remoto">Modalità Remoto</option>
+                <option value="notte">Modalità Notte</option>
+            </select>
+        </div>
+        <div class="form-group scenario-checkbox-list" id="admin-scenario-list"></div>
+        <button class="btn" onclick="saveScenarioConfig()">Salva Scenario</button>
+
+        <h2>Impostazioni Generali</h2>
+        <div style="display:flex; gap:8px;">
+            <div class="form-group" style="flex:1">
+                <label>Contatore (W)</label>
+                <input type="number" id="cfg-max-total" value="4400">
+            </div>
+            <div class="form-group" style="flex:1">
+                <label>Mag. 1 (W)</label>
+                <input type="number" id="cfg-max-m1" value="3680">
+            </div>
+            <div class="form-group" style="flex:1">
+                <label>Mag. 2 (W)</label>
+                <input type="number" id="cfg-max-m2" value="3680">
+            </div>
+        </div>
+        <button class="btn" onclick="saveGlobalSettings()">Salva Limiti</button>
+
+        <h2>Aggiungi Dispositivo</h2>
+        <div class="form-group">
+            <label>Nome</label>
+            <input type="text" id="new-name" placeholder="Es. Phon">
+        </div>
+        <div class="form-group">
+            <label>Gruppo Ciabatta (Opzionale)</label>
+            <input type="text" id="new-group" placeholder="Es. Ciabatta TV">
+        </div>
+        <div class="form-group">
+            <label>Montante</label>
+            <select id="new-montante">
+                <option value="1">Montante 1</option>
+                <option value="2">Montante 2</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Tipo Dispositivo</label>
+            <select id="new-type" onchange="toggleDualPowerFields()">
+                <option value="single">Singola Potenza (On/Off)</option>
+                <option value="dual">Doppia Potenza (Min/Max)</option>
+            </select>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <div class="form-group" id="field-w1" style="flex:1">
+                <label id="lbl-w1">Potenza (W)</label>
+                <input type="number" id="new-w1">
+            </div>
+            <div class="form-group" id="field-w2" style="display:none; flex:1">
+                <label>Max (W)</label>
+                <input type="number" id="new-w2">
+            </div>
+        </div>
+        <button class="btn btn-success" onclick="addDevice()">Aggiungi Dispositivo</button>
+
+        <h2>Dispositivi Esistenti</h2>
+        <div id="admin-device-list"></div>
+        
+        <button class="btn btn-danger" onclick="resetToDefaults()" style="margin-top: 30px; width: 100%;">Ripristina Dati di Fabbrica</button>
+    </div>
+
+    <div class="dashboard" id="dashboard-ui">
+        <div id="meter-m1" class="meter safe-bg">
+            <div class="meter-info">
+                <span class="meter-name">Linea 1</span>
+                <span class="meter-limit">Max <span id="lbl-max-m1">3680</span>W</span>
+            </div>
+            <div class="val" id="val-m1">
+                <span class="val-w">0 W</span>
+                <span class="val-a">0.0 A</span>
+            </div>
+        </div>
+        <div id="meter-m2" class="meter safe-bg">
+            <div class="meter-info">
+                <span class="meter-name">Linea 2</span>
+                <span class="meter-limit">Max <span id="lbl-max-m2">3680</span>W</span>
+            </div>
+            <div class="val" id="val-m2">
+                <span class="val-w">0 W</span>
+                <span class="val-a">0.0 A</span>
+            </div>
+        </div>
+        <div id="meter-total" class="meter safe-bg" style="border: 1px solid #ccc;">
+            <div class="meter-info">
+                <span class="meter-name">Contatore</span>
+                <span class="meter-limit">Max <span id="lbl-max-total">4400</span>W</span>
+            </div>
+            <div class="val" id="val-total">
+                <span class="val-w">0 W</span>
+                <span class="val-a">0.0 A</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const VOLTAGE = 230;
+        const APP_VERSION = "3.0"; // Aggiornato per forzare il caricamento dei gruppi ciabatta
+
+        const defaultSettings = { maxTotal: 4400, maxM1: 3680, maxM2: 3680 };
+        const defaultScenarios = {
+            remoto: { frigorifero: 0, stufa_pellet: 0 },
+            notte: { frigorifero: 0, scaldabagno_m2: 0, stufa_elettrica: 0 }
+        };
+        
+        const defaultAppliances = [
+            { id: "frigorifero", name: "Frigorifero", montante: 1, group: "Ciabatta Frigo + Pellet", modes: [{label: "ON", watts: 200}] },
+            { id: "stufa_pellet", name: "Stufa a Pellet", montante: 1, group: "Ciabatta Frigo + Pellet", modes: [{label: "Regime", watts: 110}, {label: "Accensione", watts: 330}] },
+            
+            { id: "lavastoviglie", name: "Lavastoviglie", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 800}] },
+            { id: "scaldabagno_cucina", name: "Scaldabagno Cucina (10L)", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 1200}] },
+            
+            { id: "forno", name: "Forno Elettrico", montante: 1, group: "", modes: [{label: "ON", watts: 3000}] },
+            { id: "led_m1", name: "6 Lampadine LED", montante: 1, group: "", modes: [{label: "ON", watts: 60}] },
+            { id: "scalda_acqua", name: "Scalda Acqua", montante: 1, group: "", modes: [{label: "ON", watts: 2200}] },
+            
+            { id: "stufa_elettrica", name: "Stufa Elettrica", montante: 2, group: "", modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
+            { id: "scaldabagno_m2", name: "Scaldabagno Bagno", montante: 2, group: "", modes: [{label: "ON", watts: 1200}] },
+            { id: "led_m2", name: "5 Lampadine LED", montante: 2, group: "", modes: [{label: "ON", watts: 50}] },
+            { id: "lavatrice", name: "Lavatrice", montante: 2, group: "", modes: [{label: "ON", watts: 1000}] },
+            { id: "cellulare", name: "Ricarica Cellulare", montante: 2, group: "", modes: [{label: "ON", watts: 45}] }
+        ];
+
+        if (localStorage.getItem('camVersion') !== APP_VERSION) {
+            localStorage.clear();
+            localStorage.setItem('camVersion', APP_VERSION);
+        }
+
+        let settings = JSON.parse(localStorage.getItem('camSettings')) || defaultSettings;
+        let scenarios = JSON.parse(localStorage.getItem('camScenarios')) || defaultScenarios;
+        let appliances = JSON.parse(localStorage.getItem('camApps')) || defaultAppliances;
+        let activeStates = {}; 
+
+        function getAmps(watts) { return (watts / VOLTAGE).toFixed(1); }
+
+        function init() {
+            document.getElementById('cfg-max-total').value = settings.maxTotal;
+            document.getElementById('cfg-max-m1').value = settings.maxM1;
+            document.getElementById('cfg-max-m2').value = settings.maxM2;
+            document.getElementById('lbl-max-total').innerText = settings.maxTotal;
+            document.getElementById('lbl-max-m1').innerText = settings.maxM1;
+            document.getElementById('lbl-max-m2').innerText = settings.maxM2;
+            renderSimulatorList();
+            renderAdminList();
+            renderScenarioAdminList();
+            calculate();
+        }
+
+        function setDeviceMode(id, modeIndex) {
+            if (modeIndex === -1) delete activeStates[id];
+            else activeStates[id] = modeIndex;
+            renderSimulatorList();
+            calculate();
+        }
+
+        function buildItemHTML(app) {
+            const activeModeIdx = activeStates[app.id] !== undefined ? activeStates[app.id] : -1;
+            const currentWatts = activeModeIdx >= 0 ? app.modes[activeModeIdx].watts : 0;
+            const wattsDisplay = currentWatts > 0 ? `${currentWatts} W | ${getAmps(currentWatts)} A` : "Spento";
+
+            let buttonsHTML = `<button class="seg-btn ${activeModeIdx === -1 ? 'active' : ''}" onclick="setDeviceMode('${app.id}', -1)">OFF</button>`;
+            app.modes.forEach((mode, idx) => {
+                const isActive = (activeModeIdx === idx);
+                const colorClass = (isActive && idx === 1 && app.modes.length > 1) ? 'mode-max' : '';
+                buttonsHTML += `<button class="seg-btn ${isActive ? 'active' : ''} ${colorClass}" onclick="setDeviceMode('${app.id}', ${idx})">${mode.label}</button>`;
+            });
+
+            return `
+                <div class="item">
+                    <div class="item-header">
+                        <span class="item-name">${app.name}</span>
+                        <span class="item-watts">${wattsDisplay}</span>
+                    </div>
+                    <div class="seg-control">
+                        ${buttonsHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSimulatorList() {
+            const listM1 = document.getElementById('list-m1');
+            const listM2 = document.getElementById('list-m2');
+            listM1.innerHTML = ''; listM2.innerHTML = '';
+            
+            // Raggruppa i dispositivi per montante e poi per gruppo
+            const grouped = { 1: {}, 2: {} };
+            
+            appliances.forEach(app => {
+                const g = app.group ? app.group : "_ungrouped";
+                if (!grouped[app.montante][g]) grouped[app.montante][g] = [];
+                grouped[app.montante][g].push(app);
+            });
+
+            [1, 2].forEach(m => {
+                const target = m === 1 ? listM1 : listM2;
+                
+                for (const [groupName, apps] of Object.entries(grouped[m])) {
+                    if (groupName !== "_ungrouped") {
+                        let groupHTML = `<div class="ciabatta-group"><div class="ciabatta-title">🔌 ${groupName}</div>`;
+                        apps.forEach(a => groupHTML += buildItemHTML(a));
+                        groupHTML += `</div>`;
+                        target.innerHTML += groupHTML;
+                    } else {
+                        apps.forEach(a => target.innerHTML += buildItemHTML(a));
+                    }
+                }
+            });
+        }
+
+        function calculate() {
+            let m1Total = 0, m2Total = 0;
+            appliances.forEach(app => {
+                if (activeStates[app.id] !== undefined) {
+                    const watts = app.modes[activeStates[app.id]].watts;
+                    if (app.montante == 1) m1Total += parseInt(watts);
+                    else m2Total += parseInt(watts);
+                }
+            });
+            updateMeter('m1', m1Total, settings.maxM1);
+            updateMeter('m2', m2Total, settings.maxM2);
+            updateMeter('total', m1Total + m2Total, settings.maxTotal);
+        }
+
+        function updateMeter(id, watts, limit) {
+            const meter = document.getElementById(`meter-${id}`);
+            document.getElementById(`val-${id}`).innerHTML = `<span class="val-w">${watts} W</span><span class="val-a">${getAmps(watts)} A</span>`;
+            meter.className = 'meter';
+            if (watts > limit) meter.classList.add('danger-bg');
+            else if (watts > limit * 0.85) meter.classList.add('warning-bg');
+            else meter.classList.add('safe-bg');
+        }
+
+        function applyScenario(type) {
+            activeStates = {};
+            if (type !== 'tutto_spento' && scenarios[type]) {
+                for (const [id, modeIndex] of Object.entries(scenarios[type])) {
+                    if (appliances.find(a => a.id === id)) activeStates[id] = modeIndex;
+                }
+            }
+            renderSimulatorList();
+            calculate();
+        }
+
+        function toggleDualPowerFields() {
+            const isDual = document.getElementById('new-type').value === 'dual';
+            document.getElementById('field-w2').style.display = isDual ? 'block' : 'none';
+            document.getElementById('lbl-w1').innerText = isDual ? 'Min (W)' : 'Potenza (W)';
+        }
+
+        function renderAdminList() {
+            const list = document.getElementById('admin-device-list');
+            list.innerHTML = '';
+            appliances.forEach(app => {
+                const modeText = app.modes.map(m => `${m.label}: ${m.watts}W`).join(" / ");
+                const groupText = app.group ? `<br><small style="color:#888;">🔌 ${app.group}</small>` : '';
+                list.innerHTML += `
+                    <div class="item" style="flex-direction:row; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; flex-direction:column; font-size: 0.85rem;">
+                            <strong>${app.name} (M${app.montante})</strong>
+                            <span style="color:#666;">${modeText}${groupText}</span>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteDevice('${app.id}')">Elimina</button>
+                    </div>
+                `;
+            });
+        }
+
+        function renderScenarioAdminList() {
+            const selected = document.getElementById('cfg-scenario-select').value;
+            const list = document.getElementById('admin-scenario-list');
+            list.innerHTML = '';
+            const config = scenarios[selected] || {};
+            
+            appliances.forEach(app => {
+                const isActive = config[app.id] !== undefined;
+                let selectHTML = `<select id="scen-sel-${app.id}" ${!isActive ? 'disabled' : ''}>`;
+                app.modes.forEach((mode, idx) => {
+                    const selectedAttr = (config[app.id] === idx) ? 'selected' : '';
+                    selectHTML += `<option value="${idx}" ${selectedAttr}>${mode.label} (${mode.watts}W)</option>`;
+                });
+                selectHTML += `</select>`;
+
+                list.innerHTML += `
+                    <label>
+                        <div style="display:flex; align-items:center;">
+                            <input type="checkbox" id="scen-chk-${app.id}" onchange="document.getElementById('scen-sel-${app.id}').disabled = !this.checked" ${isActive ? 'checked' : ''} style="transform: scale(1.2); margin-right:6px;"> 
+                            <span style="font-size: 0.8rem;">${app.name}</span>
+                        </div>
+                        ${selectHTML}
+                    </label>
+                `;
+            });
+        }
+
+        function saveScenarioConfig() {
+            const selected = document.getElementById('cfg-scenario-select').value;
+            const newConfig = {};
+            appliances.forEach(app => {
+                if(document.getElementById(`scen-chk-${app.id}`).checked) {
+                    newConfig[app.id] = parseInt(document.getElementById(`scen-sel-${app.id}`).value);
+                }
+            });
+            scenarios[selected] = newConfig;
+            localStorage.setItem('camScenarios', JSON.stringify(scenarios));
+            alert("Scenario aggiornato!");
+        }
+
+        function saveGlobalSettings() {
+            settings.maxTotal = parseInt(document.getElementById('cfg-max-total').value);
+            settings.maxM1 = parseInt(document.getElementById('cfg-max-m1').value);
+            settings.maxM2 = parseInt(document.getElementById('cfg-max-m2').value);
+            localStorage.setItem('camSettings', JSON.stringify(settings));
+            init();
+            alert("Limiti salvati!");
+        }
+
+        function addDevice() {
+            const name = document.getElementById('new-name').value;
+            const group = document.getElementById('new-group').value.trim();
+            const montante = parseInt(document.getElementById('new-montante').value);
+            const isDual = document.getElementById('new-type').value === 'dual';
+            const w1 = parseInt(document.getElementById('new-w1').value);
+            
+            if (!name || isNaN(w1)) return alert("Compila i campi nome e potenza.");
+            
+            const modes = [];
+            if (isDual) {
+                const w2 = parseInt(document.getElementById('new-w2').value);
+                if (isNaN(w2)) return alert("Inserisci la potenza massima.");
+                modes.push({label: "MIN", watts: w1});
+                modes.push({label: "MAX", watts: w2});
+            } else {
+                modes.push({label: "ON", watts: w1});
+            }
+
+            const id = 'dev_' + Date.now();
+            appliances.push({ id, name, montante, group, modes });
+            
+            localStorage.setItem('camApps', JSON.stringify(appliances));
+            document.getElementById('new-name').value = ''; 
+            document.getElementById('new-group').value = ''; 
+            document.getElementById('new-w1').value = ''; 
+            document.getElementById('new-w2').value = '';
+            
+            init();
+        }
+
+        function deleteDevice(id) {
+            if(!confirm("Eliminare il dispositivo?")) return;
+            appliances = appliances.filter(app => app.id !== id);
+            delete activeStates[id];
+            for(let key in scenarios) delete scenarios[key][id];
+            
+            localStorage.setItem('camApps', JSON.stringify(appliances));
+            localStorage.setItem('camScenarios', JSON.stringify(scenarios));
+            init();
+        }
+
+        function resetToDefaults() {
+            if(!confirm("Attenzione: riporterai tutto ai dati di fabbrica. Procedo?")) return;
+            localStorage.clear();
+            location.reload();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            document.getElementById('dashboard-ui').style.display = tabId === 'simulatore' ? 'block' : 'none';
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
