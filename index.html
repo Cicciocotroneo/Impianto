@@ -17,29 +17,37 @@
         }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { margin: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 210px; }
-        
+
         .header { background: #222; color: white; display: flex; justify-content: space-around; padding: 6px 0; position: sticky; top: 0; z-index: 100; }
         .tab-btn { background: none; border: none; color: white; font-size: 0.9rem; padding: 10px; cursor: pointer; opacity: 0.6; }
         .tab-btn.active { opacity: 1; border-bottom: 3px solid var(--primary); font-weight: bold; }
-        
+
         .container { padding: 12px; max-width: 600px; margin: 0 auto; display: none; }
         .container.active { display: block; }
-        
+
         h2 { border-bottom: 1px solid #ddd; padding-bottom: 4px; color: #444; font-size: 1rem; margin-top: 15px; margin-bottom: 10px;}
-        
+
         /* Gruppi Ciabatta */
-        .ciabatta-group { border: 1px dashed #999; border-radius: 6px; padding: 8px; margin-bottom: 10px; background: #fcfcfc; }
+        .ciabatta-group { border: 1px dashed #999; border-radius: 6px; padding: 8px; margin-bottom: 10px; background: #fcfcfc; transition: all 0.3s; }
         .ciabatta-title { font-size: 0.75rem; font-weight: bold; color: #666; margin-bottom: 6px; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
         
+        /* Allarmi Ciabatta */
+        .ciabatta-warning { border-color: var(--warning); background-color: #fffdf5; box-shadow: 0 0 5px rgba(255,193,7,0.3); }
+        .ciabatta-danger { border-color: var(--danger); background-color: #fff5f5; box-shadow: 0 0 8px rgba(220,53,69,0.4); animation: flashCiabatta 1s infinite alternate; }
+        @keyframes flashCiabatta {
+            from { border-color: var(--danger); background-color: #fff5f5; }
+            to { border-color: #ffb3b3; background-color: #ffcccc; }
+        }
+
         /* Liste Elettrodomestici - Font compatti */
         .item { background: var(--card-bg); padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; }
         .ciabatta-group .item { margin-bottom: 4px; box-shadow: none; border: 1px solid #eee; }
         .ciabatta-group .item:last-child { margin-bottom: 0; }
-        
+
         .item-header { display: flex; justify-content: space-between; align-items: center; }
         .item-name { font-weight: 600; font-size: 0.85rem; }
         .item-watts { font-size: 0.75rem; color: #666; background: #f0f0f0; padding: 2px 6px; border-radius: 4px; }
-        
+
         /* Controllo a Segmenti */
         .seg-control { display: flex; background: var(--inactive); border-radius: 4px; overflow: hidden; }
         .seg-btn { flex: 1; padding: 6px 4px; text-align: center; font-size: 0.75rem; font-weight: bold; border: none; background: transparent; color: #555; cursor: pointer; transition: 0.15s; border-right: 1px solid #ccc; }
@@ -60,7 +68,7 @@
         .safe-bg { background: #d4edda; color: #155724; }
         .warning-bg { background: #fff3cd; color: #856404; }
         .danger-bg { background: #f8d7da; color: #721c24; }
-        
+
         /* Form Amministrazione */
         .form-group { margin-bottom: 10px; }
         .form-group label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.8rem; }
@@ -68,11 +76,11 @@
         .btn { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .btn-success { background: var(--safe); }
         .btn-danger { background: var(--danger); width: auto; padding: 6px 10px; font-size: 0.8rem; }
-        
+
         .scenarios { display: flex; gap: 8px; margin-bottom: 12px; }
         .scenario-btn { flex: 1; padding: 8px; background: #e0e0e0; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;}
         .scenario-btn:active { background: #ccc; }
-        
+
         .scenario-checkbox-list { background: white; padding: 8px; border-radius: 4px; border: 1px solid #ccc; max-height: 250px; overflow-y: auto; }
         .scenario-checkbox-list label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-weight: normal; font-size: 0.85rem; border-bottom: 1px solid #eee; padding-bottom: 4px; }
         .scenario-checkbox-list select { width: auto; padding: 2px; font-size: 0.8rem; }
@@ -164,7 +172,7 @@
 
         <h2>Dispositivi Esistenti</h2>
         <div id="admin-device-list"></div>
-        
+
         <button class="btn btn-danger" onclick="resetToDefaults()" style="margin-top: 30px; width: 100%;">Ripristina Dati di Fabbrica</button>
     </div>
 
@@ -203,27 +211,27 @@
 
     <script>
         const VOLTAGE = 230;
-        const APP_VERSION = "3.0"; // Aggiornato per forzare il caricamento dei gruppi ciabatta
+        const APP_VERSION = "3.1"; 
 
         const defaultSettings = { maxTotal: 4400, maxM1: 3680, maxM2: 3680 };
         const defaultScenarios = {
             remoto: { stufa_elettrica: 0, stufa_pellet: 1 },
             notte: { frigorifero: 0, scaldabagno_m2: 0, stufa_elettrica: 0, stufa_elettrica2: 0 }
         };
-        
+
         const defaultAppliances = [
             { id: "frigorifero", name: "Frigorifero", montante: 1, group: "Ciabatta Frigo + Pellet", modes: [{label: "ON", watts: 200}] },
             { id: "stufa_pellet", name: "Stufa a Pellet", montante: 1, group: "Ciabatta Frigo + Pellet", modes: [{label: "Regime", watts: 110}, {label: "Accensione", watts: 330}] },
             { id: "aspirapolvere_stufa", name: "Aspira Cenere", montante: 1, group: "Ciabatta Frigo + Pellet", modes: [{label: "ON", watts: 600}] },
-            
+
             { id: "lavastoviglie", name: "Lavastoviglie", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 800}] },
             { id: "scaldabagno_cucina", name: "Scaldabagno Cucina (10L)", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 1200}] },
             { id: "aspirapolvere", name: "Aspirapolvere", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 190}] },
-            
+
             { id: "forno", name: "Forno Elettrico", montante: 1, group: "", modes: [{label: "ON", watts: 3000}] },
             { id: "led_m1", name: "6 Lampadine LED", montante: 1, group: "", modes: [{label: "ON", watts: 60}] },
             { id: "scalda_acqua", name: "Scalda Acqua", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 2200}] },
-            
+
             { id: "stufa_elettrica", name: "Stufa Elettrica", montante: 2, group: "", modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
             { id: "stufa_elettrica2", name: "Stufa Elettrica 2", montante: 2, group: "", modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
             { id: "scaldabagno_m2", name: "Scaldabagno Bagno", montante: 2, group: "", modes: [{label: "ON", watts: 1200}] },
@@ -293,10 +301,10 @@
             const listM1 = document.getElementById('list-m1');
             const listM2 = document.getElementById('list-m2');
             listM1.innerHTML = ''; listM2.innerHTML = '';
-            
+
             // Raggruppa i dispositivi per montante e poi per gruppo
             const grouped = { 1: {}, 2: {} };
-            
+
             appliances.forEach(app => {
                 const g = app.group ? app.group : "_ungrouped";
                 if (!grouped[app.montante][g]) grouped[app.montante][g] = [];
@@ -305,10 +313,32 @@
 
             [1, 2].forEach(m => {
                 const target = m === 1 ? listM1 : listM2;
-                
+
                 for (const [groupName, apps] of Object.entries(grouped[m])) {
                     if (groupName !== "_ungrouped") {
-                        let groupHTML = `<div class="ciabatta-group"><div class="ciabatta-title">🔌 ${groupName}</div>`;
+                        
+                        // Calcola il totale dei watt attivi in questo gruppo/ciabatta
+                        let groupWatts = 0;
+                        apps.forEach(a => {
+                            if (activeStates[a.id] !== undefined) {
+                                groupWatts += a.modes[activeStates[a.id]].watts;
+                            }
+                        });
+
+                        let groupClass = "ciabatta-group";
+                        let alertHTML = "";
+
+                        if (groupWatts >= 3500) {
+                            groupClass += " ciabatta-danger";
+                            alertHTML = `<span style="color:var(--danger); font-size:0.7rem; margin-left:auto;">⚠️ ${groupWatts}W (MAX!)</span>`;
+                        } else if (groupWatts >= 2300) {
+                            groupClass += " ciabatta-warning";
+                            alertHTML = `<span style="color:#856404; font-size:0.7rem; margin-left:auto;">⚠️ ${groupWatts}W (Alta)</span>`;
+                        } else if (groupWatts > 0) {
+                            alertHTML = `<span style="color:#666; font-size:0.7rem; font-weight:normal; margin-left:auto;">${groupWatts}W</span>`;
+                        }
+
+                        let groupHTML = `<div class="${groupClass}"><div class="ciabatta-title">🔌 ${groupName} ${alertHTML}</div>`;
                         apps.forEach(a => groupHTML += buildItemHTML(a));
                         groupHTML += `</div>`;
                         target.innerHTML += groupHTML;
@@ -382,7 +412,7 @@
             const list = document.getElementById('admin-scenario-list');
             list.innerHTML = '';
             const config = scenarios[selected] || {};
-            
+
             appliances.forEach(app => {
                 const isActive = config[app.id] !== undefined;
                 let selectHTML = `<select id="scen-sel-${app.id}" ${!isActive ? 'disabled' : ''}>`;
@@ -432,9 +462,9 @@
             const montante = parseInt(document.getElementById('new-montante').value);
             const isDual = document.getElementById('new-type').value === 'dual';
             const w1 = parseInt(document.getElementById('new-w1').value);
-            
+
             if (!name || isNaN(w1)) return alert("Compila i campi nome e potenza.");
-            
+
             const modes = [];
             if (isDual) {
                 const w2 = parseInt(document.getElementById('new-w2').value);
@@ -447,13 +477,13 @@
 
             const id = 'dev_' + Date.now();
             appliances.push({ id, name, montante, group, modes });
-            
+
             localStorage.setItem('camApps', JSON.stringify(appliances));
             document.getElementById('new-name').value = ''; 
             document.getElementById('new-group').value = ''; 
             document.getElementById('new-w1').value = ''; 
             document.getElementById('new-w2').value = '';
-            
+
             init();
         }
 
@@ -462,7 +492,7 @@
             appliances = appliances.filter(app => app.id !== id);
             delete activeStates[id];
             for(let key in scenarios) delete scenarios[key][id];
-            
+
             localStorage.setItem('camApps', JSON.stringify(appliances));
             localStorage.setItem('camScenarios', JSON.stringify(scenarios));
             init();
