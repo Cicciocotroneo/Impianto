@@ -85,7 +85,7 @@
         .scenario-checkbox-list { background: white; padding: 8px; border-radius: 4px; border: 1px solid #ccc; max-height: 250px; overflow-y: auto; }
         .scenario-checkbox-list label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-weight: normal; font-size: 0.85rem; border-bottom: 1px solid #eee; padding-bottom: 4px; }
         .scenario-checkbox-list select { width: auto; padding: 2px; font-size: 0.8rem; }
-        
+
         .admin-box { background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; }
     </style>
 </head>
@@ -114,7 +114,7 @@
     </div>
 
     <div id="admin" class="container">
-        
+
         <div class="admin-box">
             <h2 style="margin-top:0;">1. Configurazione Scenari</h2>
             <div class="form-group">
@@ -253,35 +253,48 @@
 
     <script>
         const VOLTAGE = 230;
-        const APP_VERSION = "5.2"; // Aggiornato per forzare interfaccia assegnazione ciabatte rapida
+        const APP_VERSION = "5.3"; // Aggiornato per forzare i nuovi preset di default
 
         const defaultSettings = { maxTotal: 4400, maxM1: 3680, maxM2: 3680, maxM3: 4400 };
         const defaultScenarios = {
             remoto: { stufa_elettrica: 0, stufa_pellet: 1, router: 0, tv: 1, tv2: 1 },
             notte: { frigorifero: 0, scaldabagno_m2: 0, stufa_elettrica: 0, stufa_elettrica2: 0, router: 0, tv: 0, tv2: 1 }
         };
-        const defaultGroups = {}; 
+        
+        // Ciabatte preimpostate come da immagine
+        const defaultGroups = {
+            "TV soggiorno": "sicura",
+            "TV Camera": "sicura",
+            "Cucina": "comm10",
+            "Stufe": "comm10"
+        }; 
 
+        // Dispositivi con le assegnazioni alle ciabatte come da immagine
         const defaultAppliances = [
-            { id: "frigorifero", name: "Frigorifero", montante: 1, group: "", modes: [{label: "ON", watts: 200}] },
-            { id: "stufa_pellet", name: "Stufa a Pellet", montante: 1, group: "", modes: [{label: "Regime", watts: 110}, {label: "Accensione", watts: 330}] },
-            { id: "aspirapolvere_stufa", name: "Aspira Cenere", montante: 1, group: "", modes: [{label: "ON", watts: 600}] },
-            { id: "lavastoviglie", name: "Lavastoviglie", montante: 1, group: "", modes: [{label: "ON", watts: 800}] },
-            { id: "scaldabagno_cucina", name: "Scaldabagno (10L)", montante: 1, group: "", modes: [{label: "ON", watts: 1200}] },
-            { id: "aspirapolvere", name: "Aspirapolvere", montante: 1, group: "", modes: [{label: "ON", watts: 190}] },
-            { id: "robot", name: "Monsieur Cuisine", montante: 1, group: "", modes: [{label: "ON", watts: 1200}] },
-            { id: "tv2", name: "TV Cucina", montante: 1, group: "", modes: [{label: "StandBy", watts: 1}, {label: "Accensione", watts: 20}] },
+            { id: "frigorifero", name: "Frigorifero", montante: 1, group: "Stufe", modes: [{label: "ON", watts: 200}] },
+            { id: "stufa_pellet", name: "Stufa a Pellet", montante: 1, group: "Stufe", modes: [{label: "Regime", watts: 110}, {label: "Accensione", watts: 330}] },
+            { id: "aspirapolvere_stufa", name: "Aspira Cenere", montante: 1, group: "Stufe", modes: [{label: "ON", watts: 600}] },
+            
+            { id: "lavastoviglie", name: "Lavastoviglie", montante: 1, group: "Cucina", modes: [{label: "ON", watts: 800}] },
+            { id: "scaldabagno_cucina", name: "Scaldabagno (10L)", montante: 1, group: "Cucina", modes: [{label: "ON", watts: 1200}] },
+            { id: "aspirapolvere", name: "Aspirapolvere", montante: 1, group: "Cucina", modes: [{label: "ON", watts: 190}] },
+            { id: "robot", name: "Monsieur Cuisine", montante: 1, group: "Cucina", modes: [{label: "ON", watts: 1200}] },
+            
+            { id: "tv2", name: "TV Cucina", montante: 1, group: "TV soggiorno", modes: [{label: "StandBy", watts: 1}, {label: "Accensione", watts: 20}] },
             { id: "forno", name: "Forno Elettrico", montante: 1, group: "", modes: [{label: "ON", watts: 3000}] },
             { id: "led_m1", name: "6 Lampadine LED", montante: 1, group: "", modes: [{label: "ON", watts: 60}] },
-            { id: "scalda_acqua", name: "Scalda Acqua", montante: 1, group: "", modes: [{label: "ON", watts: 2200}] },
-            { id: "stufa_elettrica", name: "Stufa Elettrica", montante: 2, group: "", modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
+            { id: "scalda_acqua", name: "Scalda Acqua", montante: 1, group: "Cucina", modes: [{label: "ON", watts: 2200}] },
+            
+            { id: "stufa_elettrica", name: "Stufa Elettrica", montante: 2, group: "TV Camera", modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
             { id: "stufa_elettrica2", name: "Stufa Elettrica 2", montante: 2, group: "", modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
             { id: "scaldabagno_m2", name: "Scaldabagno Bagno", montante: 2, group: "", modes: [{label: "ON", watts: 1200}] },
             { id: "led_m2", name: "5 Lampadine LED", montante: 2, group: "", modes: [{label: "ON", watts: 50}] },
             { id: "lavatrice", name: "Lavatrice", montante: 2, group: "", modes: [{label: "ON", watts: 1000}] },
             { id: "asciugacapelli", name: "Phon", montante: 2, group: "", modes: [{label: "ON", watts: 2000}] },
+            
             { id: "router", name: "Router", montante: 3, group: "", modes: [{label: "ON", watts: 10}] },    
-            { id: "tv", name: "TV Camera", montante: 2, group: "", modes: [{label: "StandBy", watts: 1}, {label: "Accensione", watts: 28}] },
+            
+            { id: "tv", name: "TV Camera", montante: 2, group: "TV Camera", modes: [{label: "StandBy", watts: 1}, {label: "Accensione", watts: 28}] },
             { id: "cellulare", name: "Ricarica Cellulare", montante: 2, group: "", modes: [{label: "ON", watts: 45}] }
         ];
 
@@ -370,7 +383,7 @@
 
                 for (const [groupName, apps] of Object.entries(grouped[m])) {
                     if (groupName !== "_ungrouped" && ciabatte[groupName]) {
-                        
+
                         let type = ciabatte[groupName];
                         let warnLimit = 2300, dangerLimit = 3500;
                         let typeLabel = "Standard 16A";
@@ -476,31 +489,30 @@
             const type = document.getElementById('new-ciabatta-type').value;
             if (!name) return alert("Inserisci un nome per la ciabatta.");
             if (ciabatte[name]) return alert("Esiste già una ciabatta con questo nome.");
-            
+
             ciabatte[name] = type;
             localStorage.setItem('camGroups', JSON.stringify(ciabatte));
             document.getElementById('new-ciabatta-name').value = '';
-            
+
             renderCiabatteAdmin();
             updateCiabatteSelect();
-            renderAdminList(); // Aggiorna anche i menu a tendina dei dispositivi esistenti
+            renderAdminList(); 
         }
 
         function deleteCiabatta(name) {
             if(!confirm(`Eliminare la ciabatta "${name}"? I dispositivi collegati torneranno diretti al muro.`)) return;
-            
+
             delete ciabatte[name];
             appliances.forEach(app => { if(app.group === name) app.group = ""; });
-            
+
             localStorage.setItem('camGroups', JSON.stringify(ciabatte));
             localStorage.setItem('camApps', JSON.stringify(appliances));
-            
+
             renderCiabatteAdmin();
             updateCiabatteSelect();
             renderSimulatorList();
             renderAdminList();
         }
-
 
         // --- GESTIONE DISPOSITIVI ---
         function toggleDualPowerFields() {
@@ -508,8 +520,7 @@
             document.getElementById('field-w2').style.display = isDual ? 'block' : 'none';
             document.getElementById('lbl-w1').innerText = isDual ? 'Min (W)' : 'Potenza (W)';
         }
-        
-        // Nuova funzione per cambiare la ciabatta assegnata al volo
+
         function changeDeviceGroup(id, newGroup) {
             const app = appliances.find(a => a.id === id);
             if (app) {
@@ -524,15 +535,14 @@
             list.innerHTML = '';
             appliances.forEach(app => {
                 const modeText = app.modes.map(m => `${m.label}: ${m.watts}W`).join(" / ");
-                
-                // Genera la tendina per assegnare rapidamente la ciabatta
+
                 let selectHTML = `<select onchange="changeDeviceGroup('${app.id}', this.value)" style="margin-top: 5px; padding: 3px; font-size: 0.75rem; border-radius:4px; border:1px solid #ccc; max-width:200px;">
                                     <option value="">-- Muro (Nessuna Ciabatta) --</option>`;
                 for (const name of Object.keys(ciabatte)) {
                     selectHTML += `<option value="${name}" ${app.group === name ? 'selected' : ''}>🔌 ${name}</option>`;
                 }
                 selectHTML += `</select>`;
-                
+
                 list.innerHTML += `
                     <div class="item" style="flex-direction:row; align-items:center; justify-content:space-between;">
                         <div style="display:flex; flex-direction:column; font-size: 0.85rem;">
