@@ -87,6 +87,21 @@
         .scenario-checkbox-list select { width: auto; padding: 2px; font-size: 0.8rem; }
 
         .admin-box { background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; }
+        
+        /* Modal Popup Stile */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        .modal-content {
+            background: white; width: 90%; max-width: 400px;
+            padding: 20px; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-btn { background: var(--text-main); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; width: 100%; font-size: 1rem;}
     </style>
 </head>
 <body>
@@ -94,6 +109,15 @@
     <div class="header">
         <button class="tab-btn active" onclick="switchTab('simulatore')">Simulatore</button>
         <button class="tab-btn" onclick="switchTab('admin')">Amministrazione</button>
+    </div>
+
+    <!-- Popup Allarme Scatto -->
+    <div class="modal-overlay" id="tripModal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; color: var(--danger); text-align: center;">⚡ ATTENZIONE! ⚡</h3>
+            <div id="modal-text"></div>
+            <button class="modal-btn" onclick="document.getElementById('tripModal').style.display='none'">Ho capito</button>
+        </div>
     </div>
 
     <div id="simulatore" class="container active">
@@ -253,15 +277,15 @@
 
     <script>
         const VOLTAGE = 230;
-        const APP_VERSION = "5.3"; // Aggiornato per forzare i nuovi preset di default
+        const APP_VERSION = "6.0"; // Aggiornato con Allarmi Popup Smart e preset invertiti TV
 
         const defaultSettings = { maxTotal: 4400, maxM1: 3680, maxM2: 3680, maxM3: 4400 };
         const defaultScenarios = {
+            // Modificati valori TV e TV2 invertendoli come richiesto
             remoto: { stufa_elettrica: 0, stufa_pellet: 1, router: 0, tv: 0, tv2: 0 },
             notte: { frigorifero: 0, scaldabagno_m2: 0, stufa_elettrica: 0, stufa_elettrica2: 0, router: 0, tv: 1, tv2: 0 }
         };
         
-        // Ciabatte preimpostate come da immagine
         const defaultGroups = {
             "TV soggiorno": "sicura",
             "TV Camera": "sicura",
@@ -269,7 +293,6 @@
             "Stufe": "comm10"
         }; 
 
-        // Dispositivi con le assegnazioni alle ciabatte come da immagine
         const defaultAppliances = [
             { id: "frigorifero", name: "Frigorifero", montante: 1, group: "Stufe", modes: [{label: "ON", watts: 200}] },
             { id: "stufa_pellet", name: "Stufa a Pellet", montante: 1, group: "Stufe", modes: [{label: "Regime", watts: 110}, {label: "Accensione", watts: 330}] },
@@ -308,6 +331,9 @@
         let appliances = JSON.parse(localStorage.getItem('camApps')) || defaultAppliances;
         let ciabatte = JSON.parse(localStorage.getItem('camGroups')) || defaultGroups;
         let activeStates = {}; 
+        
+        // Memoria per evitare che i popup appaiano in loop continuo
+        let trippedState = { m1: false, m2: false, m3: false, total: false };
 
         function getAmps(watts) { return (watts / VOLTAGE).toFixed(1); }
 
@@ -426,6 +452,68 @@
             });
         }
 
+        // --- GESTIONE POPUP SMART ---
+        function buildAlertMsg(name, current, limit, activeApps) {
+            let excess = current - limit;
+            
+            // Ordina i dispositivi attivi in base al consumo (dal più alto al più basso)
+            let apps = activeApps.map(a => {
+                return { name: a.name, watts: a.modes[activeStates[a.id]].watts };
+            }).sort((a, b) => b.watts - a.watts);
+
+            let suggestion = "Spegni qualche dispositivo ad alto consumo.";
+            
+            // Trova il dispositivo singolo più piccolo che basta a coprire l'eccesso
+            let bestSingle = apps.slice().reverse().find(a => a.watts >= excess);
+            
+            if (bestSingle) {
+                suggestion = `Ti basterebbe spegnere: <br><b>${bestSingle.name}</b> (-${bestSingle.watts}W)`;
+            } else if (apps.length >= 2) {
+                suggestion = `Prova a spegnere questi due: <br><b>${apps[0].name}</b> e <b>${apps[1].name}</b> (-${apps[0].watts + apps[1].watts}W)`;
+            } else if (apps.length === 1) {
+                suggestion = `Spegni <b>${apps[0].name}</b> (-${apps[0].watts}W)`;
+            }
+
+            return `
+                <div style="text-align: left; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 5px 0; color: #333;">❌ ${name}</h4>
+                    <p style="margin: 0 0 10px 0; font-size: 0.9rem;">Hai raggiunto <b>${current}W</b> (il limite è ${limit}W).</p>
+                    <div style="background: #eef2f5; padding: 10px; border-radius: 6px; border-left: 4px solid var(--primary); font-size: 0.85rem;">
+                        💡 <b>Consiglio:</b><br>${suggestion}
+                    </div>
+                </div>
+            `;
+        }
+
+        function checkTrips(m1, m2, m3, total) {
+            let alerts = [];
+
+            if (m1 > settings.maxM1 && !trippedState.m1) {
+                alerts.push(buildAlertMsg("Magnetotermico 1 Scattato", m1, settings.maxM1, appliances.filter(a => activeStates[a.id] !== undefined && a.montante == 1)));
+                trippedState.m1 = true;
+            } else if (m1 <= settings.maxM1) { trippedState.m1 = false; }
+
+            if (m2 > settings.maxM2 && !trippedState.m2) {
+                alerts.push(buildAlertMsg("Magnetotermico 2 Scattato", m2, settings.maxM2, appliances.filter(a => activeStates[a.id] !== undefined && a.montante == 2)));
+                trippedState.m2 = true;
+            } else if (m2 <= settings.maxM2) { trippedState.m2 = false; }
+
+            if (m3 > settings.maxM3 && !trippedState.m3) {
+                alerts.push(buildAlertMsg("Montante Diretto 3 in Sovraccarico", m3, settings.maxM3, appliances.filter(a => activeStates[a.id] !== undefined && a.montante == 3)));
+                trippedState.m3 = true;
+            } else if (m3 <= settings.maxM3) { trippedState.m3 = false; }
+
+            if (total > settings.maxTotal && !trippedState.total) {
+                alerts.push(buildAlertMsg("Contatore Generale Scattato", total, settings.maxTotal, appliances.filter(a => activeStates[a.id] !== undefined)));
+                trippedState.total = true;
+            } else if (total <= settings.maxTotal) { trippedState.total = false; }
+
+            if (alerts.length > 0) {
+                document.getElementById('modal-text').innerHTML = alerts.join('');
+                document.getElementById('tripModal').style.display = 'flex';
+            }
+        }
+
         function calculate() {
             let m1Total = 0, m2Total = 0, m3Total = 0;
             appliances.forEach(app => {
@@ -436,10 +524,16 @@
                     else if (app.montante == 3) m3Total += parseInt(watts);
                 }
             });
+            
+            let total = m1Total + m2Total + m3Total;
+
             updateMeter('m1', m1Total, settings.maxM1);
             updateMeter('m2', m2Total, settings.maxM2);
             updateMeter('m3', m3Total, settings.maxM3);
-            updateMeter('total', m1Total + m2Total + m3Total, settings.maxTotal);
+            updateMeter('total', total, settings.maxTotal);
+
+            // Verifica se è scattato qualcosa
+            checkTrips(m1Total, m2Total, m3Total, total);
         }
 
         function updateMeter(id, watts, limit) {
@@ -453,6 +547,9 @@
 
         function applyScenario(type) {
             activeStates = {};
+            // Quando si applica uno scenario resetto gli allarmi, così ri-notifica se lo scenario stesso supera i limiti
+            trippedState = { m1: false, m2: false, m3: false, total: false };
+            
             if (type !== 'tutto_spento' && scenarios[type]) {
                 for (const [id, modeIndex] of Object.entries(scenarios[type])) {
                     if (appliances.find(a => a.id === id)) activeStates[id] = modeIndex;
@@ -462,7 +559,7 @@
             calculate();
         }
 
-        // --- GESTIONE CIABATTE ---
+        // --- GESTIONE CIABATTE E AMMINISTRAZIONE ---
         function renderCiabatteAdmin() {
             const list = document.getElementById('admin-ciabatta-list');
             list.innerHTML = '';
@@ -514,7 +611,6 @@
             renderAdminList();
         }
 
-        // --- GESTIONE DISPOSITIVI ---
         function toggleDualPowerFields() {
             const isDual = document.getElementById('new-type').value === 'dual';
             document.getElementById('field-w2').style.display = isDual ? 'block' : 'none';
