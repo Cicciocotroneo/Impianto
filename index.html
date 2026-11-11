@@ -253,16 +253,15 @@
 
     <script>
         const VOLTAGE = 230;
-        const APP_VERSION = "5.0"; 
+        const APP_VERSION = "5.1"; // Aggiornato per forzare interfaccia assegnazione ciabatte rapida
 
         const defaultSettings = { maxTotal: 4400, maxM1: 3680, maxM2: 3680, maxM3: 4400 };
         const defaultScenarios = {
             remoto: { stufa_elettrica: 0, stufa_pellet: 1, router: 0, tv: 1, tv2: 1 },
             notte: { frigorifero: 0, scaldabagno_m2: 0, stufa_elettrica: 0, stufa_elettrica2: 0, router: 0, tv: 0, tv2: 1 }
         };
-        const defaultGroups = {}; // Nessuna ciabatta di default
+        const defaultGroups = {}; 
 
-        // I dispositivi di default ora NON hanno ciabatte assegnate (group: "")
         const defaultAppliances = [
             { id: "frigorifero", name: "Frigorifero", montante: 1, group: "", modes: [{label: "ON", watts: 200}] },
             { id: "stufa_pellet", name: "Stufa a Pellet", montante: 1, group: "", modes: [{label: "Regime", watts: 110}, {label: "Accensione", watts: 330}] },
@@ -372,7 +371,6 @@
                 for (const [groupName, apps] of Object.entries(grouped[m])) {
                     if (groupName !== "_ungrouped" && ciabatte[groupName]) {
                         
-                        // Determina i limiti dinamici basati sul tipo di ciabatta
                         let type = ciabatte[groupName];
                         let warnLimit = 2300, dangerLimit = 3500;
                         let typeLabel = "Standard 16A";
@@ -482,8 +480,10 @@
             ciabatte[name] = type;
             localStorage.setItem('camGroups', JSON.stringify(ciabatte));
             document.getElementById('new-ciabatta-name').value = '';
+            
             renderCiabatteAdmin();
             updateCiabatteSelect();
+            renderAdminList(); // Aggiorna anche i menu a tendina dei dispositivi esistenti
         }
 
         function deleteCiabatta(name) {
@@ -508,18 +508,37 @@
             document.getElementById('field-w2').style.display = isDual ? 'block' : 'none';
             document.getElementById('lbl-w1').innerText = isDual ? 'Min (W)' : 'Potenza (W)';
         }
+        
+        // Nuova funzione per cambiare la ciabatta assegnata al volo
+        function changeDeviceGroup(id, newGroup) {
+            const app = appliances.find(a => a.id === id);
+            if (app) {
+                app.group = newGroup;
+                localStorage.setItem('camApps', JSON.stringify(appliances));
+                renderSimulatorList();
+            }
+        }
 
         function renderAdminList() {
             const list = document.getElementById('admin-device-list');
             list.innerHTML = '';
             appliances.forEach(app => {
                 const modeText = app.modes.map(m => `${m.label}: ${m.watts}W`).join(" / ");
-                const groupText = app.group ? `<br><small style="color:#888;">🔌 ${app.group}</small>` : '';
+                
+                // Genera la tendina per assegnare rapidamente la ciabatta
+                let selectHTML = `<select onchange="changeDeviceGroup('${app.id}', this.value)" style="margin-top: 5px; padding: 3px; font-size: 0.75rem; border-radius:4px; border:1px solid #ccc; max-width:200px;">
+                                    <option value="">-- Muro (Nessuna Ciabatta) --</option>`;
+                for (const name of Object.keys(ciabatte)) {
+                    selectHTML += `<option value="${name}" ${app.group === name ? 'selected' : ''}>🔌 ${name}</option>`;
+                }
+                selectHTML += `</select>`;
+                
                 list.innerHTML += `
                     <div class="item" style="flex-direction:row; align-items:center; justify-content:space-between;">
                         <div style="display:flex; flex-direction:column; font-size: 0.85rem;">
                             <strong>${app.name} (M${app.montante})</strong>
-                            <span style="color:#666;">${modeText}${groupText}</span>
+                            <span style="color:#666;">${modeText}</span>
+                            ${selectHTML}
                         </div>
                         <button class="btn btn-danger" onclick="deleteDevice('${app.id}')">Elimina</button>
                     </div>
