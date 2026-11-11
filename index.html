@@ -127,13 +127,13 @@
             <button class="scenario-btn" onclick="applyScenario('notte')">Notte</button>
         </div>
 
-        <h2>Montante 1 (Prese/Elettrom.)</h2>
+        <h2>Circuito 1 (Prese/Elettrom.)</h2>
         <div id="list-m1"></div>
 
-        <h2>Montante 2 (Luce/Bagno)</h2>
+        <h2>Circuito 2 (Luce/Bagno)</h2>
         <div id="list-m2"></div>
 
-        <h2>No Mag.T. (Diretta/Esterno)</h2>
+        <h2>Circuito 3 (Diretta/Esterno)</h2>
         <div id="list-m3"></div>
     </div>
 
@@ -185,11 +185,11 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Montante Elettrico</label>
+                <label>Circuito Elettrico</label>
                 <select id="new-montante">
-                    <option value="1">Montante 1</option>
-                    <option value="2">Montante 2</option>
-                    <option value="3">Diretto (Montante 3)</option>
+                    <option value="1">Circuito 1</option>
+                    <option value="2">Circuito 2</option>
+                    <option value="3">Circuito 3 (Diretto)</option>
                 </select>
             </div>
             <div class="form-group">
@@ -225,15 +225,15 @@
                     <input type="number" id="cfg-max-total" value="4400">
                 </div>
                 <div class="form-group" style="flex:1 1 45%;">
-                    <label>Mag. 1 (W)</label>
+                    <label>Circ. 1 (W)</label>
                     <input type="number" id="cfg-max-m1" value="3680">
                 </div>
                 <div class="form-group" style="flex:1 1 45%;">
-                    <label>Mag. 2 (W)</label>
+                    <label>Circ. 2 (W)</label>
                     <input type="number" id="cfg-max-m2" value="3680">
                 </div>
                 <div class="form-group" style="flex:1 1 45%;">
-                    <label>Mag. 3 (W)</label>
+                    <label>Circ. 3 (W)</label>
                     <input type="number" id="cfg-max-m3" value="4400">
                 </div>
             </div>
@@ -247,21 +247,21 @@
     <div class="dashboard" id="dashboard-ui">
         <div id="meter-m1" class="meter safe-bg">
             <div class="meter-info">
-                <span class="meter-name">Linea 1</span>
+                <span class="meter-name">Circuito 1</span>
                 <span class="meter-limit">Max <span id="lbl-max-m1">3680</span>W</span>
             </div>
             <div class="val" id="val-m1"><span class="val-w">0 W</span><span class="val-a">0.0 A</span></div>
         </div>
         <div id="meter-m2" class="meter safe-bg">
             <div class="meter-info">
-                <span class="meter-name">Linea 2</span>
+                <span class="meter-name">Circuito 2</span>
                 <span class="meter-limit">Max <span id="lbl-max-m2">3680</span>W</span>
             </div>
             <div class="val" id="val-m2"><span class="val-w">0 W</span><span class="val-a">0.0 A</span></div>
         </div>
         <div id="meter-m3" class="meter safe-bg">
             <div class="meter-info">
-                <span class="meter-name">Linea 3</span>
+                <span class="meter-name">Circuito 3</span>
                 <span class="meter-limit">Max <span id="lbl-max-m3">4400</span>W</span>
             </div>
             <div class="val" id="val-m3"><span class="val-w">0 W</span><span class="val-a">0.0 A</span></div>
@@ -277,11 +277,10 @@
 
     <script>
         const VOLTAGE = 230;
-        const APP_VERSION = "6.0"; // Aggiornato con Allarmi Popup Smart e preset invertiti TV
+        const APP_VERSION = "7.0"; 
 
         const defaultSettings = { maxTotal: 4400, maxM1: 3680, maxM2: 3680, maxM3: 4400 };
         const defaultScenarios = {
-            // Modificati valori TV e TV2 invertendoli come richiesto
             remoto: { stufa_elettrica: 0, stufa_pellet: 1, router: 0, tv: 0, tv2: 0 },
             notte: { frigorifero: 0, scaldabagno_m2: 0, stufa_elettrica: 0, stufa_elettrica2: 0, router: 0, tv: 1, tv2: 0 }
         };
@@ -293,32 +292,34 @@
             "Stufe": "comm10"
         }; 
 
+        // prio = priorità. Più è alta (es. 100) più è VITALE e NON verrà suggerito di spegnerlo se non come ultima spiaggia.
+        // Più è bassa (es. 10) più è RIMANDABILE e verrà suggerito per primo nel popup.
         const defaultAppliances = [
-            { id: "frigorifero", name: "Frigorifero", montante: 1, group: "Stufe", modes: [{label: "ON", watts: 200}] },
-            { id: "stufa_pellet", name: "Stufa a Pellet", montante: 1, group: "Stufe", modes: [{label: "Regime", watts: 110}, {label: "Accensione", watts: 330}] },
-            { id: "aspirapolvere_stufa", name: "Aspira Cenere", montante: 1, group: "Stufe", modes: [{label: "ON", watts: 600}] },
+            { id: "frigorifero", name: "Frigorifero", montante: 1, group: "Stufe", prio: 100, modes: [{label: "ON", watts: 200}] },
+            { id: "stufa_pellet", name: "Stufa a Pellet", montante: 1, group: "Stufe", prio: 80, modes: [{label: "Regime", watts: 110}, {label: "Accensione", watts: 330}] },
+            { id: "aspirapolvere_stufa", name: "Aspira Cenere", montante: 1, group: "Stufe", prio: 20, modes: [{label: "ON", watts: 600}] },
             
-            { id: "lavastoviglie", name: "Lavastoviglie", montante: 1, group: "Cucina", modes: [{label: "ON", watts: 800}] },
-            { id: "scaldabagno_cucina", name: "Scaldabagno (10L)", montante: 1, group: "Cucina", modes: [{label: "ON", watts: 1200}] },
-            { id: "aspirapolvere", name: "Aspirapolvere", montante: 1, group: "Cucina", modes: [{label: "ON", watts: 190}] },
-            { id: "robot", name: "Monsieur Cuisine", montante: 1, group: "Cucina", modes: [{label: "ON", watts: 1200}] },
+            { id: "lavastoviglie", name: "Lavastoviglie", montante: 1, group: "Cucina", prio: 10, modes: [{label: "ON", watts: 800}] },
+            { id: "scaldabagno_cucina", name: "Scaldabagno (10L)", montante: 1, group: "Cucina", prio: 60, modes: [{label: "ON", watts: 1200}] },
+            { id: "aspirapolvere", name: "Aspirapolvere", montante: 1, group: "Cucina", prio: 20, modes: [{label: "ON", watts: 190}] },
+            { id: "robot", name: "Monsieur Cuisine", montante: 1, group: "Cucina", prio: 20, modes: [{label: "ON", watts: 1200}] },
             
-            { id: "tv2", name: "TV Cucina", montante: 1, group: "TV soggiorno", modes: [{label: "StandBy", watts: 1}, {label: "Accensione", watts: 20}] },
-            { id: "forno", name: "Forno Elettrico", montante: 1, group: "", modes: [{label: "ON", watts: 3000}] },
-            { id: "led_m1", name: "6 Lampadine LED", montante: 1, group: "", modes: [{label: "ON", watts: 60}] },
-            { id: "scalda_acqua", name: "Scalda Acqua", montante: 1, group: "Cucina", modes: [{label: "ON", watts: 2200}] },
+            { id: "tv2", name: "TV Cucina", montante: 1, group: "TV soggiorno", prio: 40, modes: [{label: "StandBy", watts: 1}, {label: "Accensione", watts: 20}] },
+            { id: "forno", name: "Forno Elettrico", montante: 1, group: "", prio: 10, modes: [{label: "ON", watts: 3000}] },
+            { id: "led_m1", name: "6 Lampadine LED", montante: 1, group: "", prio: 90, modes: [{label: "ON", watts: 60}] },
+            { id: "scalda_acqua", name: "Scalda Acqua", montante: 1, group: "Cucina", prio: 50, modes: [{label: "ON", watts: 2200}] },
             
-            { id: "stufa_elettrica", name: "Stufa Elettrica", montante: 2, group: "TV Camera", modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
-            { id: "stufa_elettrica2", name: "Stufa Elettrica 2", montante: 2, group: "", modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
-            { id: "scaldabagno_m2", name: "Scaldabagno Bagno", montante: 2, group: "", modes: [{label: "ON", watts: 1200}] },
-            { id: "led_m2", name: "5 Lampadine LED", montante: 2, group: "", modes: [{label: "ON", watts: 50}] },
-            { id: "lavatrice", name: "Lavatrice", montante: 2, group: "", modes: [{label: "ON", watts: 1000}] },
-            { id: "asciugacapelli", name: "Phon", montante: 2, group: "", modes: [{label: "ON", watts: 2000}] },
+            { id: "stufa_elettrica", name: "Stufa Elettrica", montante: 2, group: "TV Camera", prio: 80, modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
+            { id: "stufa_elettrica2", name: "Stufa Elettrica 2", montante: 2, group: "", prio: 70, modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
+            { id: "scaldabagno_m2", name: "Scaldabagno Bagno", montante: 2, group: "", prio: 60, modes: [{label: "ON", watts: 1200}] },
+            { id: "led_m2", name: "5 Lampadine LED", montante: 2, group: "", prio: 90, modes: [{label: "ON", watts: 50}] },
+            { id: "lavatrice", name: "Lavatrice", montante: 2, group: "", prio: 10, modes: [{label: "ON", watts: 1000}] },
+            { id: "asciugacapelli", name: "Phon", montante: 2, group: "", prio: 10, modes: [{label: "ON", watts: 2000}] },
             
-            { id: "router", name: "Router", montante: 3, group: "", modes: [{label: "ON", watts: 10}] },    
+            { id: "router", name: "Router", montante: 3, group: "", prio: 100, modes: [{label: "ON", watts: 10}] },    
             
-            { id: "tv", name: "TV Camera", montante: 2, group: "TV Camera", modes: [{label: "StandBy", watts: 1}, {label: "Accensione", watts: 28}] },
-            { id: "cellulare", name: "Ricarica Cellulare", montante: 2, group: "", modes: [{label: "ON", watts: 45}] }
+            { id: "tv", name: "TV Camera", montante: 2, group: "TV Camera", prio: 40, modes: [{label: "StandBy", watts: 1}, {label: "Accensione", watts: 28}] },
+            { id: "cellulare", name: "Ricarica Cellulare", montante: 2, group: "", prio: 50, modes: [{label: "ON", watts: 45}] }
         ];
 
         if (localStorage.getItem('camVersion') !== APP_VERSION) {
@@ -452,24 +453,44 @@
             });
         }
 
-        // --- GESTIONE POPUP SMART ---
+        // --- GESTIONE POPUP SMART CON PRIORITA' ---
         function buildAlertMsg(name, current, limit, activeApps) {
             let excess = current - limit;
             
-            // Ordina i dispositivi attivi in base al consumo (dal più alto al più basso)
+            // Ordina i dispositivi in base alla loro priorità/importanza.
+            // Quelli con priorità più bassa (10) sono i più inutili e vengono per primi.
+            // A parità di inutilità, mette prima quello che consuma più Watt.
             let apps = activeApps.map(a => {
-                return { name: a.name, watts: a.modes[activeStates[a.id]].watts };
-            }).sort((a, b) => b.watts - a.watts);
+                let p = a.prio !== undefined ? a.prio : 50; 
+                return { name: a.name, watts: a.modes[activeStates[a.id]].watts, prio: p };
+            }).sort((a, b) => {
+                if (a.prio !== b.prio) return a.prio - b.prio; 
+                return b.watts - a.watts; 
+            });
 
             let suggestion = "Spegni qualche dispositivo ad alto consumo.";
             
-            // Trova il dispositivo singolo più piccolo che basta a coprire l'eccesso
-            let bestSingle = apps.slice().reverse().find(a => a.watts >= excess);
+            // Cerca il singolo dispositivo più inutile che, spegnendolo, da solo basta a coprire l'eccesso
+            let bestSingle = apps.find(a => a.watts >= excess);
             
             if (bestSingle) {
                 suggestion = `Ti basterebbe spegnere: <br><b>${bestSingle.name}</b> (-${bestSingle.watts}W)`;
             } else if (apps.length >= 2) {
-                suggestion = `Prova a spegnere questi due: <br><b>${apps[0].name}</b> e <b>${apps[1].name}</b> (-${apps[0].watts + apps[1].watts}W)`;
+                // Se non basta un solo dispositivo, prova a combinare i due più "sacrificabili"
+                let foundPair = false;
+                for(let i = 0; i < apps.length; i++) {
+                    for(let j = i + 1; j < apps.length; j++) {
+                        if(apps[i].watts + apps[j].watts >= excess) {
+                            suggestion = `Prova a spegnere questi due: <br><b>${apps[i].name}</b> e <b>${apps[j].name}</b> (-${apps[i].watts + apps[j].watts}W)`;
+                            foundPair = true;
+                            break;
+                        }
+                    }
+                    if(foundPair) break;
+                }
+                if(!foundPair) {
+                     suggestion = `Inizia spegnendo <b>${apps[0].name}</b> (-${apps[0].watts}W) e qualcos'altro.`;
+                }
             } else if (apps.length === 1) {
                 suggestion = `Spegni <b>${apps[0].name}</b> (-${apps[0].watts}W)`;
             }
@@ -489,17 +510,17 @@
             let alerts = [];
 
             if (m1 > settings.maxM1 && !trippedState.m1) {
-                alerts.push(buildAlertMsg("Magnetotermico 1 Scattato", m1, settings.maxM1, appliances.filter(a => activeStates[a.id] !== undefined && a.montante == 1)));
+                alerts.push(buildAlertMsg("Circuito 1 Scattato", m1, settings.maxM1, appliances.filter(a => activeStates[a.id] !== undefined && a.montante == 1)));
                 trippedState.m1 = true;
             } else if (m1 <= settings.maxM1) { trippedState.m1 = false; }
 
             if (m2 > settings.maxM2 && !trippedState.m2) {
-                alerts.push(buildAlertMsg("Magnetotermico 2 Scattato", m2, settings.maxM2, appliances.filter(a => activeStates[a.id] !== undefined && a.montante == 2)));
+                alerts.push(buildAlertMsg("Circuito 2 Scattato", m2, settings.maxM2, appliances.filter(a => activeStates[a.id] !== undefined && a.montante == 2)));
                 trippedState.m2 = true;
             } else if (m2 <= settings.maxM2) { trippedState.m2 = false; }
 
             if (m3 > settings.maxM3 && !trippedState.m3) {
-                alerts.push(buildAlertMsg("Montante Diretto 3 in Sovraccarico", m3, settings.maxM3, appliances.filter(a => activeStates[a.id] !== undefined && a.montante == 3)));
+                alerts.push(buildAlertMsg("Circuito Diretto 3 in Sovraccarico", m3, settings.maxM3, appliances.filter(a => activeStates[a.id] !== undefined && a.montante == 3)));
                 trippedState.m3 = true;
             } else if (m3 <= settings.maxM3) { trippedState.m3 = false; }
 
@@ -532,7 +553,6 @@
             updateMeter('m3', m3Total, settings.maxM3);
             updateMeter('total', total, settings.maxTotal);
 
-            // Verifica se è scattato qualcosa
             checkTrips(m1Total, m2Total, m3Total, total);
         }
 
@@ -547,7 +567,7 @@
 
         function applyScenario(type) {
             activeStates = {};
-            // Quando si applica uno scenario resetto gli allarmi, così ri-notifica se lo scenario stesso supera i limiti
+            // Resetta le allerte così ti riavvisa se lo scenario stesso fa scattare il contatore
             trippedState = { m1: false, m2: false, m3: false, total: false };
             
             if (type !== 'tutto_spento' && scenarios[type]) {
@@ -642,7 +662,7 @@
                 list.innerHTML += `
                     <div class="item" style="flex-direction:row; align-items:center; justify-content:space-between;">
                         <div style="display:flex; flex-direction:column; font-size: 0.85rem;">
-                            <strong>${app.name} (M${app.montante})</strong>
+                            <strong>${app.name} (C${app.montante})</strong>
                             <span style="color:#666;">${modeText}</span>
                             ${selectHTML}
                         </div>
@@ -722,7 +742,8 @@
             }
 
             const id = 'dev_' + Date.now();
-            appliances.push({ id, name, montante, group, modes });
+            // Ai nuovi dispositivi manuali do una priorità bassa (10) di default così si possono spegnere facilmente
+            appliances.push({ id, name, montante, group, prio: 10, modes }); 
 
             localStorage.setItem('camApps', JSON.stringify(appliances));
             document.getElementById('new-name').value = ''; 
