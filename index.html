@@ -16,7 +16,7 @@
             --inactive: #e0e0e0;
         }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { margin: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 210px; }
+        body { margin: 0; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 240px; }
 
         .header { background: #222; color: white; display: flex; justify-content: space-around; padding: 6px 0; position: sticky; top: 0; z-index: 100; }
         .tab-btn { background: none; border: none; color: white; font-size: 0.9rem; padding: 10px; cursor: pointer; opacity: 0.6; }
@@ -31,7 +31,6 @@
         .ciabatta-group { border: 1px dashed #999; border-radius: 6px; padding: 8px; margin-bottom: 10px; background: #fcfcfc; transition: all 0.3s; }
         .ciabatta-title { font-size: 0.75rem; font-weight: bold; color: #666; margin-bottom: 6px; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
         
-        /* Allarmi Ciabatta */
         .ciabatta-warning { border-color: var(--warning); background-color: #fffdf5; box-shadow: 0 0 5px rgba(255,193,7,0.3); }
         .ciabatta-danger { border-color: var(--danger); background-color: #fff5f5; box-shadow: 0 0 8px rgba(220,53,69,0.4); animation: flashCiabatta 1s infinite alternate; }
         @keyframes flashCiabatta {
@@ -39,7 +38,7 @@
             to { border-color: #ffb3b3; background-color: #ffcccc; }
         }
 
-        /* Liste Elettrodomestici - Font compatti */
+        /* Liste */
         .item { background: var(--card-bg); padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; }
         .ciabatta-group .item { margin-bottom: 4px; box-shadow: none; border: 1px solid #eee; }
         .ciabatta-group .item:last-child { margin-bottom: 0; }
@@ -55,21 +54,21 @@
         .seg-btn.active { background: var(--safe); color: white; }
         .seg-btn.active.mode-max { background: var(--warning); color: #000; }
 
-        /* Dashboard Bottom */
+        /* Dashboard */
         .dashboard { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 8px 12px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); z-index: 100; max-width: 600px; margin: 0 auto; border-top-left-radius: 12px; border-top-right-radius: 12px; }
-        .meter { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 6px 8px; border-radius: 6px; font-weight: bold; background: #eee; }
+        .meter { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; padding: 4px 8px; border-radius: 6px; font-weight: bold; background: #eee; }
         .meter-info { display: flex; flex-direction: column; }
-        .meter-name { font-size: 0.8rem; }
-        .meter-limit { font-size: 0.7rem; color: #555; font-weight: normal; }
+        .meter-name { font-size: 0.75rem; }
+        .meter-limit { font-size: 0.65rem; color: #555; font-weight: normal; }
         .val { text-align: right; line-height: 1.1; }
-        .val-w { font-size: 1rem; display: block; }
-        .val-a { font-size: 0.75rem; font-weight: normal; }
+        .val-w { font-size: 0.95rem; display: block; }
+        .val-a { font-size: 0.7rem; font-weight: normal; }
 
         .safe-bg { background: #d4edda; color: #155724; }
         .warning-bg { background: #fff3cd; color: #856404; }
         .danger-bg { background: #f8d7da; color: #721c24; }
 
-        /* Form Amministrazione */
+        /* Form */
         .form-group { margin-bottom: 10px; }
         .form-group label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.8rem; }
         .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
@@ -92,9 +91,8 @@
         <button class="tab-btn active" onclick="switchTab('simulatore')">Simulatore</button>
         <button class="tab-btn" onclick="switchTab('admin')">Amministrazione</button>
     </div>
-       
+
     <div id="simulatore" class="container active">
- <h2>Scenari base</h2>
         <div class="scenarios">
             <button class="scenario-btn" onclick="applyScenario('tutto_spento')">Spento</button>
             <button class="scenario-btn" onclick="applyScenario('remoto')">Remoto</button>
@@ -106,6 +104,9 @@
 
         <h2>Montante 2 (Luce/Bagno)</h2>
         <div id="list-m2"></div>
+
+        <h2>Montante 3 (Diretta/Esterno)</h2>
+        <div id="list-m3"></div>
     </div>
 
     <div id="admin" class="container">
@@ -120,18 +121,22 @@
         <button class="btn" onclick="saveScenarioConfig()">Salva Scenario</button>
 
         <h2>Impostazioni Generali</h2>
-        <div style="display:flex; gap:8px;">
-            <div class="form-group" style="flex:1">
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <div class="form-group" style="flex:1 1 45%;">
                 <label>Contatore (W)</label>
                 <input type="number" id="cfg-max-total" value="4400">
             </div>
-            <div class="form-group" style="flex:1">
+            <div class="form-group" style="flex:1 1 45%;">
                 <label>Mag. 1 (W)</label>
                 <input type="number" id="cfg-max-m1" value="3680">
             </div>
-            <div class="form-group" style="flex:1">
+            <div class="form-group" style="flex:1 1 45%;">
                 <label>Mag. 2 (W)</label>
                 <input type="number" id="cfg-max-m2" value="3680">
+            </div>
+            <div class="form-group" style="flex:1 1 45%;">
+                <label>Mag. 3 (W)</label>
+                <input type="number" id="cfg-max-m3" value="4400">
             </div>
         </div>
         <button class="btn" onclick="saveGlobalSettings()">Salva Limiti</button>
@@ -139,17 +144,18 @@
         <h2>Aggiungi Dispositivo</h2>
         <div class="form-group">
             <label>Nome</label>
-            <input type="text" id="new-name" placeholder="Es. Phon">
+            <input type="text" id="new-name" placeholder="Es. Faretto Giardino">
         </div>
         <div class="form-group">
             <label>Gruppo Ciabatta (Opzionale)</label>
             <input type="text" id="new-group" placeholder="Es. Ciabatta TV">
         </div>
         <div class="form-group">
-            <label>Montante</label>
+            <label>Collegamento</label>
             <select id="new-montante">
                 <option value="1">Montante 1</option>
                 <option value="2">Montante 2</option>
+                <option value="3">Montante 3</option>
             </select>
         </div>
         <div class="form-group">
@@ -198,9 +204,19 @@
                 <span class="val-a">0.0 A</span>
             </div>
         </div>
-        <div id="meter-total" class="meter safe-bg" style="border: 1px solid #ccc;">
+        <div id="meter-m3" class="meter safe-bg">
             <div class="meter-info">
-                <span class="meter-name">Contatore</span>
+                <span class="meter-name">Linea 3</span>
+                <span class="meter-limit">Max <span id="lbl-max-m3">4400</span>W</span>
+            </div>
+            <div class="val" id="val-m3">
+                <span class="val-w">0 W</span>
+                <span class="val-a">0.0 A</span>
+            </div>
+        </div>
+        <div id="meter-total" class="meter safe-bg" style="border: 1px solid #ccc; margin-top: 6px;">
+            <div class="meter-info">
+                <span class="meter-name">Contatore Generale</span>
                 <span class="meter-limit">Max <span id="lbl-max-total">4400</span>W</span>
             </div>
             <div class="val" id="val-total">
@@ -212,9 +228,9 @@
 
     <script>
         const VOLTAGE = 230;
-        const APP_VERSION = "3.2"; 
+        const APP_VERSION = "4.0"; 
 
-        const defaultSettings = { maxTotal: 4400, maxM1: 3680, maxM2: 3680 };
+        const defaultSettings = { maxTotal: 4400, maxM1: 3680, maxM2: 3680, maxM3: 4400 };
         const defaultScenarios = {
             remoto: { stufa_elettrica: 0, stufa_pellet: 1 },
             notte: { frigorifero: 0, scaldabagno_m2: 0, stufa_elettrica: 0, stufa_elettrica2: 0 }
@@ -228,7 +244,6 @@
             { id: "lavastoviglie", name: "Lavastoviglie", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 800}] },
             { id: "scaldabagno_cucina", name: "Scaldabagno Cucina (10L)", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 1200}] },
             { id: "aspirapolvere", name: "Aspirapolvere", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 190}] },
-           { id: "robot", name: "Monsieur Cuisine", montante: 1, group: "Ciabatta Cucina", modes: [{label: "ON", watts: 1200}] },
 
             { id: "forno", name: "Forno Elettrico", montante: 1, group: "", modes: [{label: "ON", watts: 3000}] },
             { id: "led_m1", name: "6 Lampadine LED", montante: 1, group: "", modes: [{label: "ON", watts: 60}] },
@@ -239,8 +254,6 @@
             { id: "scaldabagno_m2", name: "Scaldabagno Bagno", montante: 2, group: "", modes: [{label: "ON", watts: 1200}] },
             { id: "led_m2", name: "5 Lampadine LED", montante: 2, group: "", modes: [{label: "ON", watts: 50}] },
             { id: "lavatrice", name: "Lavatrice", montante: 2, group: "", modes: [{label: "ON", watts: 1000}] },
-            { id: "asciugacapelli", name: "Phon", montante: 2, group: "", modes: [{label: "ON", watts: 2000}] },
-            
             { id: "cellulare", name: "Ricarica Cellulare", montante: 2, group: "", modes: [{label: "ON", watts: 45}] }
         ];
 
@@ -260,9 +273,13 @@
             document.getElementById('cfg-max-total').value = settings.maxTotal;
             document.getElementById('cfg-max-m1').value = settings.maxM1;
             document.getElementById('cfg-max-m2').value = settings.maxM2;
+            document.getElementById('cfg-max-m3').value = settings.maxM3;
+            
             document.getElementById('lbl-max-total').innerText = settings.maxTotal;
             document.getElementById('lbl-max-m1').innerText = settings.maxM1;
             document.getElementById('lbl-max-m2').innerText = settings.maxM2;
+            document.getElementById('lbl-max-m3').innerText = settings.maxM3;
+            
             renderSimulatorList();
             renderAdminList();
             renderScenarioAdminList();
@@ -304,24 +321,26 @@
         function renderSimulatorList() {
             const listM1 = document.getElementById('list-m1');
             const listM2 = document.getElementById('list-m2');
-            listM1.innerHTML = ''; listM2.innerHTML = '';
+            const listM3 = document.getElementById('list-m3');
+            listM1.innerHTML = ''; listM2.innerHTML = ''; listM3.innerHTML = '';
 
-            // Raggruppa i dispositivi per montante e poi per gruppo
-            const grouped = { 1: {}, 2: {} };
+            const grouped = { 1: {}, 2: {}, 3: {} };
 
             appliances.forEach(app => {
                 const g = app.group ? app.group : "_ungrouped";
+                // Fallback for old data without montante 3
+                if (!grouped[app.montante]) grouped[app.montante] = {};
                 if (!grouped[app.montante][g]) grouped[app.montante][g] = [];
                 grouped[app.montante][g].push(app);
             });
 
-            [1, 2].forEach(m => {
-                const target = m === 1 ? listM1 : listM2;
+            [1, 2, 3].forEach(m => {
+                const target = m === 1 ? listM1 : (m === 2 ? listM2 : listM3);
+
+                if(!grouped[m]) return;
 
                 for (const [groupName, apps] of Object.entries(grouped[m])) {
                     if (groupName !== "_ungrouped") {
-                        
-                        // Calcola il totale dei watt attivi in questo gruppo/ciabatta
                         let groupWatts = 0;
                         apps.forEach(a => {
                             if (activeStates[a.id] !== undefined) {
@@ -354,17 +373,19 @@
         }
 
         function calculate() {
-            let m1Total = 0, m2Total = 0;
+            let m1Total = 0, m2Total = 0, m3Total = 0;
             appliances.forEach(app => {
                 if (activeStates[app.id] !== undefined) {
                     const watts = app.modes[activeStates[app.id]].watts;
                     if (app.montante == 1) m1Total += parseInt(watts);
-                    else m2Total += parseInt(watts);
+                    else if (app.montante == 2) m2Total += parseInt(watts);
+                    else if (app.montante == 3) m3Total += parseInt(watts);
                 }
             });
             updateMeter('m1', m1Total, settings.maxM1);
             updateMeter('m2', m2Total, settings.maxM2);
-            updateMeter('total', m1Total + m2Total, settings.maxTotal);
+            updateMeter('m3', m3Total, settings.maxM3);
+            updateMeter('total', m1Total + m2Total + m3Total, settings.maxTotal);
         }
 
         function updateMeter(id, watts, limit) {
@@ -455,6 +476,7 @@
             settings.maxTotal = parseInt(document.getElementById('cfg-max-total').value);
             settings.maxM1 = parseInt(document.getElementById('cfg-max-m1').value);
             settings.maxM2 = parseInt(document.getElementById('cfg-max-m2').value);
+            settings.maxM3 = parseInt(document.getElementById('cfg-max-m3').value);
             localStorage.setItem('camSettings', JSON.stringify(settings));
             init();
             alert("Limiti salvati!");
