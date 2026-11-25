@@ -76,7 +76,10 @@
         .btn { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .btn-success { background: var(--safe); }
         .btn-danger { background: var(--danger); width: auto; padding: 6px 10px; font-size: 0.8rem; }
+        .btn-edit { background: var(--primary); width: auto; padding: 6px 10px; font-size: 0.8rem; margin-top: 0; }
+        .btn-secondary { background: #6c757d; }
         .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top:0; padding: 6px; }
+        .action-btns { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
         .scenarios { display: flex; gap: 8px; margin-bottom: 12px; }
         .scenario-btn { flex: 1; padding: 8px; background: #e0e0e0; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;}
@@ -87,7 +90,7 @@
         .scenario-checkbox-list select { width: auto; padding: 2px; font-size: 0.8rem; }
 
         .admin-box { background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; }
-        
+
         /* Modal Popup Stile */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -96,9 +99,9 @@
             backdrop-filter: blur(2px);
         }
         .modal-content {
-            background: white; width: 90%; max-width: 400px;
-            padding: 20px; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.3);
-            animation: slideIn 0.3s ease-out;
+            background: white; width: 92%; max-width: 420px; max-height: 90vh; overflow-y: auto;
+            padding: 18px; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            animation: slideIn 0.25s ease-out;
         }
         @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-btn { background: var(--text-main); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; width: 100%; font-size: 1rem;}
@@ -117,6 +120,74 @@
             <h3 style="margin-top: 0; color: var(--danger); text-align: center;">⚡ ATTENZIONE! ⚡</h3>
             <div id="modal-text"></div>
             <button class="modal-btn" onclick="document.getElementById('tripModal').style.display='none'">Ho capito</button>
+        </div>
+    </div>
+
+    <!-- Popup Modifica Dispositivo -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 1.05rem;">Modifica Dispositivo</h3>
+            <input type="hidden" id="edit-id">
+            <div class="form-group">
+                <label>Nome</label>
+                <input type="text" id="edit-name">
+            </div>
+            <div style="display:flex; gap:8px;">
+                <div class="form-group" style="flex:1;">
+                    <label>Circuito</label>
+                    <select id="edit-montante">
+                        <option value="1">Circuito 1</option>
+                        <option value="2">Circuito 2</option>
+                        <option value="3">Circuito 3</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>Priorità</label>
+                    <select id="edit-prio">
+                        <option value="10">Rimandabile (10)</option>
+                        <option value="20">Bassa (20)</option>
+                        <option value="40">Media-Bassa (40)</option>
+                        <option value="60">Media (60)</option>
+                        <option value="80">Alta (80)</option>
+                        <option value="100">Vitale (100)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Ciabatta</label>
+                <select id="edit-group"></select>
+            </div>
+            <div class="form-group">
+                <label>Tipo Dispositivo</label>
+                <select id="edit-type" onchange="toggleEditDualFields()">
+                    <option value="single">Singola Potenza (On/Off)</option>
+                    <option value="dual">Doppia Potenza (Min/Max)</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <div class="form-group" style="flex:1;">
+                    <label id="edit-lbl-l1">Etichetta 1</label>
+                    <input type="text" id="edit-l1" placeholder="Es. ON o MIN">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label id="edit-lbl-w1">Potenza 1 (W)</label>
+                    <input type="number" id="edit-w1">
+                </div>
+            </div>
+            <div id="edit-row-2" style="display:none; gap:8px;">
+                <div class="form-group" style="flex:1;">
+                    <label>Etichetta 2</label>
+                    <input type="text" id="edit-l2" placeholder="Es. MAX">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>Potenza 2 (W)</label>
+                    <input type="number" id="edit-w2">
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top: 10px;">
+                <button class="btn btn-secondary" onclick="closeEditModal()" style="flex:1;">Annulla</button>
+                <button class="btn btn-success" onclick="saveEditDevice()" style="flex:1;">Salva</button>
+            </div>
         </div>
     </div>
 
@@ -181,7 +252,6 @@
                 <label>Collega a Ciabatta?</label>
                 <select id="new-group">
                     <option value="">Nessuna (Presa a Muro Diretta)</option>
-                    <!-- Popolato via JS -->
                 </select>
             </div>
             <div class="form-group">
@@ -284,7 +354,7 @@
             remoto: { stufa_elettrica: 0, stufa_pellet: 1, router: 0, tv: 0, tv2: 0 },
             notte: { frigorifero: 0, scaldabagno_m2: 0, stufa_elettrica: 0, stufa_elettrica2: 0, router: 0, tv: 1, tv2: 0 }
         };
-        
+
         const defaultGroups = {
             "TV soggiorno": "sicura",
             "TV Camera": "sicura",
@@ -292,32 +362,30 @@
             "Stufe": "comm10"
         }; 
 
-        // prio = priorità. Più è alta (es. 100) più è VITALE e NON verrà suggerito di spegnerlo se non come ultima spiaggia.
-        // Più è bassa (es. 10) più è RIMANDABILE e verrà suggerito per primo nel popup.
         const defaultAppliances = [
             { id: "frigorifero", name: "Frigorifero", montante: 1, group: "Stufe", prio: 100, modes: [{label: "ON", watts: 200}] },
             { id: "stufa_pellet", name: "Stufa a Pellet", montante: 1, group: "Stufe", prio: 80, modes: [{label: "Regime", watts: 110}, {label: "Accensione", watts: 330}] },
             { id: "aspirapolvere_stufa", name: "Aspira Cenere", montante: 1, group: "Stufe", prio: 20, modes: [{label: "ON", watts: 600}] },
-            
+
             { id: "lavastoviglie", name: "Lavastoviglie", montante: 1, group: "Cucina", prio: 10, modes: [{label: "ON", watts: 800}] },
             { id: "scaldabagno_cucina", name: "Scaldabagno (10L)", montante: 1, group: "Cucina", prio: 60, modes: [{label: "ON", watts: 1200}] },
             { id: "aspirapolvere", name: "Aspirapolvere", montante: 1, group: "Cucina", prio: 20, modes: [{label: "ON", watts: 190}] },
             { id: "robot", name: "Monsieur Cuisine", montante: 1, group: "Cucina", prio: 20, modes: [{label: "ON", watts: 1200}] },
-            
+
             { id: "tv2", name: "TV Cucina", montante: 1, group: "TV soggiorno", prio: 40, modes: [{label: "StandBy", watts: 1}, {label: "Accensione", watts: 20}] },
             { id: "forno", name: "Forno Elettrico", montante: 1, group: "", prio: 10, modes: [{label: "ON", watts: 3000}] },
             { id: "led_m1", name: "6 Lampadine LED", montante: 1, group: "", prio: 90, modes: [{label: "ON", watts: 60}] },
             { id: "scalda_acqua", name: "Scalda Acqua", montante: 1, group: "Cucina", prio: 50, modes: [{label: "ON", watts: 2200}] },
-            
+
             { id: "stufa_elettrica", name: "Stufa Elettrica", montante: 2, group: "TV Camera", prio: 80, modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
             { id: "stufa_elettrica2", name: "Stufa Elettrica 2", montante: 2, group: "", prio: 70, modes: [{label: "MIN", watts: 1000}, {label: "MAX", watts: 2500}] },
             { id: "scaldabagno_m2", name: "Scaldabagno Bagno", montante: 2, group: "", prio: 60, modes: [{label: "ON", watts: 1200}] },
             { id: "led_m2", name: "5 Lampadine LED", montante: 2, group: "", prio: 90, modes: [{label: "ON", watts: 50}] },
             { id: "lavatrice", name: "Lavatrice", montante: 2, group: "", prio: 10, modes: [{label: "ON", watts: 1000}] },
             { id: "asciugacapelli", name: "Phon", montante: 2, group: "", prio: 10, modes: [{label: "ON", watts: 2000}] },
-            
+
             { id: "router", name: "Router", montante: 3, group: "", prio: 100, modes: [{label: "ON", watts: 10}] },    
-            
+
             { id: "tv", name: "TV Camera", montante: 2, group: "TV Camera", prio: 40, modes: [{label: "StandBy", watts: 1}, {label: "Accensione", watts: 28}] },
             { id: "cellulare", name: "Ricarica Cellulare", montante: 2, group: "", prio: 50, modes: [{label: "ON", watts: 45}] }
         ];
@@ -332,8 +400,6 @@
         let appliances = JSON.parse(localStorage.getItem('camApps')) || defaultAppliances;
         let ciabatte = JSON.parse(localStorage.getItem('camGroups')) || defaultGroups;
         let activeStates = {}; 
-        
-        // Memoria per evitare che i popup appaiano in loop continuo
         let trippedState = { m1: false, m2: false, m3: false, total: false };
 
         function getAmps(watts) { return (watts / VOLTAGE).toFixed(1); }
@@ -456,10 +522,7 @@
         // --- GESTIONE POPUP SMART CON PRIORITA' ---
         function buildAlertMsg(name, current, limit, activeApps) {
             let excess = current - limit;
-            
-            // Ordina i dispositivi in base alla loro priorità/importanza.
-            // Quelli con priorità più bassa (10) sono i più inutili e vengono per primi.
-            // A parità di inutilità, mette prima quello che consuma più Watt.
+
             let apps = activeApps.map(a => {
                 let p = a.prio !== undefined ? a.prio : 50; 
                 return { name: a.name, watts: a.modes[activeStates[a.id]].watts, prio: p };
@@ -469,14 +532,11 @@
             });
 
             let suggestion = "Spegni qualche dispositivo ad alto consumo.";
-            
-            // Cerca il singolo dispositivo più inutile che, spegnendolo, da solo basta a coprire l'eccesso
             let bestSingle = apps.find(a => a.watts >= excess);
-            
+
             if (bestSingle) {
                 suggestion = `Ti basterebbe spegnere: <br><b>${bestSingle.name}</b> (-${bestSingle.watts}W)`;
             } else if (apps.length >= 2) {
-                // Se non basta un solo dispositivo, prova a combinare i due più "sacrificabili"
                 let foundPair = false;
                 for(let i = 0; i < apps.length; i++) {
                     for(let j = i + 1; j < apps.length; j++) {
@@ -545,7 +605,7 @@
                     else if (app.montante == 3) m3Total += parseInt(watts);
                 }
             });
-            
+
             let total = m1Total + m2Total + m3Total;
 
             updateMeter('m1', m1Total, settings.maxM1);
@@ -567,9 +627,8 @@
 
         function applyScenario(type) {
             activeStates = {};
-            // Resetta le allerte così ti riavvisa se lo scenario stesso fa scattare il contatore
             trippedState = { m1: false, m2: false, m3: false, total: false };
-            
+
             if (type !== 'tutto_spento' && scenarios[type]) {
                 for (const [id, modeIndex] of Object.entries(scenarios[type])) {
                     if (appliances.find(a => a.id === id)) activeStates[id] = modeIndex;
@@ -646,13 +705,109 @@
             }
         }
 
+        // --- MODIFICA DISPOSITIVO ESISTENTE ---
+        function toggleEditDualFields() {
+            const isDual = document.getElementById('edit-type').value === 'dual';
+            document.getElementById('edit-row-2').style.display = isDual ? 'flex' : 'none';
+            document.getElementById('edit-lbl-l1').innerText = isDual ? 'Etichetta 1' : 'Etichetta';
+            document.getElementById('edit-lbl-w1').innerText = isDual ? 'Potenza 1 (W)' : 'Potenza (W)';
+        }
+
+        function openEditModal(id) {
+            const app = appliances.find(a => a.id === id);
+            if (!app) return;
+
+            document.getElementById('edit-id').value = app.id;
+            document.getElementById('edit-name').value = app.name;
+            document.getElementById('edit-montante').value = app.montante;
+
+            // Popola le ciabatte disponibili
+            const groupSel = document.getElementById('edit-group');
+            groupSel.innerHTML = '<option value="">Nessuna (Presa a Muro Diretta)</option>';
+            for (const name of Object.keys(ciabatte)) {
+                groupSel.innerHTML += `<option value="${name}">${name}</option>`;
+            }
+            groupSel.value = app.group || "";
+
+            // Priorità (se non corrisponde esattamente a un'opzione standard, sceglie la più vicina)
+            const prioOptions = [10, 20, 40, 60, 80, 100];
+            const currentPrio = app.prio !== undefined ? app.prio : 50;
+            const closestPrio = prioOptions.reduce((prev, curr) => Math.abs(curr - currentPrio) < Math.abs(prev - currentPrio) ? curr : prev);
+            document.getElementById('edit-prio').value = closestPrio;
+
+            const isDual = app.modes.length > 1;
+            document.getElementById('edit-type').value = isDual ? 'dual' : 'single';
+            document.getElementById('edit-l1').value = app.modes[0].label;
+            document.getElementById('edit-w1').value = app.modes[0].watts;
+
+            if (isDual) {
+                document.getElementById('edit-l2').value = app.modes[1].label;
+                document.getElementById('edit-w2').value = app.modes[1].watts;
+            } else {
+                document.getElementById('edit-l2').value = "MAX";
+                document.getElementById('edit-w2').value = "";
+            }
+
+            toggleEditDualFields();
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function saveEditDevice() {
+            const id = document.getElementById('edit-id').value;
+            const app = appliances.find(a => a.id === id);
+            if (!app) return;
+
+            const name = document.getElementById('edit-name').value.trim();
+            const montante = parseInt(document.getElementById('edit-montante').value);
+            const group = document.getElementById('edit-group').value;
+            const prio = parseInt(document.getElementById('edit-prio').value);
+            const isDual = document.getElementById('edit-type').value === 'dual';
+            const l1 = document.getElementById('edit-l1').value.trim() || (isDual ? "MIN" : "ON");
+            const w1 = parseInt(document.getElementById('edit-w1').value);
+
+            if (!name || isNaN(w1)) return alert("Inserisci un nome e una potenza validi.");
+
+            const modes = [{ label: l1, watts: w1 }];
+            if (isDual) {
+                const l2 = document.getElementById('edit-l2').value.trim() || "MAX";
+                const w2 = parseInt(document.getElementById('edit-w2').value);
+                if (isNaN(w2)) return alert("Inserisci la seconda potenza.");
+                modes.push({ label: l2, watts: w2 });
+            }
+
+            app.name = name;
+            app.montante = montante;
+            app.group = group;
+            app.prio = prio;
+            app.modes = modes;
+
+            // Adatta eventuali stati attivi o scenari se il dispositivo passa da doppia a singola potenza
+            if (activeStates[id] !== undefined && activeStates[id] >= modes.length) {
+                activeStates[id] = 0;
+            }
+            for (let key in scenarios) {
+                if (scenarios[key][id] !== undefined && scenarios[key][id] >= modes.length) {
+                    scenarios[key][id] = 0;
+                }
+            }
+
+            localStorage.setItem('camApps', JSON.stringify(appliances));
+            localStorage.setItem('camScenarios', JSON.stringify(scenarios));
+            closeEditModal();
+            init();
+        }
+
         function renderAdminList() {
             const list = document.getElementById('admin-device-list');
             list.innerHTML = '';
             appliances.forEach(app => {
                 const modeText = app.modes.map(m => `${m.label}: ${m.watts}W`).join(" / ");
 
-                let selectHTML = `<select onchange="changeDeviceGroup('${app.id}', this.value)" style="margin-top: 5px; padding: 3px; font-size: 0.75rem; border-radius:4px; border:1px solid #ccc; max-width:200px;">
+                let selectHTML = `<select onchange="changeDeviceGroup('${app.id}', this.value)" style="margin-top: 5px; padding: 3px; font-size: 0.75rem; border-radius:4px; border:1px solid #ccc; max-width:190px;">
                                     <option value="">-- Muro (Nessuna Ciabatta) --</option>`;
                 for (const name of Object.keys(ciabatte)) {
                     selectHTML += `<option value="${name}" ${app.group === name ? 'selected' : ''}>🔌 ${name}</option>`;
@@ -660,13 +815,16 @@
                 selectHTML += `</select>`;
 
                 list.innerHTML += `
-                    <div class="item" style="flex-direction:row; align-items:center; justify-content:space-between;">
-                        <div style="display:flex; flex-direction:column; font-size: 0.85rem;">
+                    <div class="item" style="flex-direction:row; align-items:center; justify-content:space-between; gap: 8px;">
+                        <div style="display:flex; flex-direction:column; font-size: 0.85rem; min-width: 0;">
                             <strong>${app.name} (C${app.montante})</strong>
                             <span style="color:#666;">${modeText}</span>
                             ${selectHTML}
                         </div>
-                        <button class="btn btn-danger" onclick="deleteDevice('${app.id}')">Elimina</button>
+                        <div class="action-btns">
+                            <button class="btn btn-edit" onclick="openEditModal('${app.id}')">Modifica</button>
+                            <button class="btn btn-danger" onclick="deleteDevice('${app.id}')" style="margin-top:0;">Elimina</button>
+                        </div>
                     </div>
                 `;
             });
@@ -742,7 +900,6 @@
             }
 
             const id = 'dev_' + Date.now();
-            // Ai nuovi dispositivi manuali do una priorità bassa (10) di default così si possono spegnere facilmente
             appliances.push({ id, name, montante, group, prio: 10, modes }); 
 
             localStorage.setItem('camApps', JSON.stringify(appliances));
